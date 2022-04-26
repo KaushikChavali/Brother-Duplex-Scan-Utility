@@ -11,6 +11,8 @@ that the files are ordered [1:20, 2:19, 3:18, 4:17 ..., 10-11].
 """
 
 import argparse
+from posixpath import dirname
+import img2pdf
 import os, os.path
 import sys
 
@@ -28,6 +30,9 @@ parser.add_argument('Path',
                     type=str,
                     help='the path to scanned pages')
 
+parser.add_argument("--pdf", default=False, action="store_true",
+                    help="Combines the PNG files into a PDF file.")
+
 # Execute the parse_args() method
 args = parser.parse_args()
 
@@ -41,7 +46,7 @@ if not os.path.isdir(dir):
 
 # Get the number of files in the folder
 no_of_files = len([f for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f)) and f[0] != '.'])
-print(no_of_files)
+print(no_of_files, "files processed.")
 
 # Correct file ordering and naminga
 for i in range(int(no_of_files/2)):
@@ -72,3 +77,20 @@ for i in range(int(no_of_files/2)):
     # Rename files and correct ordering
     os.rename(filename_front, new_filename_front)
     os.rename(filename_back, new_filename_back)
+
+# Convert the PNG files into a PDF.
+if args.pdf:
+    imgs = []
+    for fname in sorted(os.listdir(dir)):
+        if not fname.endswith(".png"):
+            continue
+        path = os.path.join(dir, fname)
+        if os.path.isdir(path):
+            continue
+        imgs.append(path)
+
+    with open(dir + "/out.pdf","wb") as f:
+        f.write(img2pdf.convert(imgs))
+    print("Scanned document ordered and PDF generated.")
+else:
+    print("Scanned document ordered.")
